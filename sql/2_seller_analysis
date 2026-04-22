@@ -1,0 +1,104 @@
+-- Seller performance analysis
+
+-- top 10 sellers by revenue + their main product category
+WITH top10sellers AS (
+    SELECT 
+        s.seller_id AS sellerid,
+        ROUND(SUM(oi.price)::numeric, 0) AS total_revenues
+    FROM sellers s
+    JOIN order_items oi ON s.seller_id = oi.seller_id
+    JOIN products p ON p.product_id = oi.product_id
+    GROUP BY s.seller_id
+    ORDER BY total_revenues DESC
+    LIMIT 10
+),
+seller_category_revenue AS (
+    SELECT 
+        s.seller_id,
+        t.product_category_name_english AS category_english,
+        ROUND(SUM(oi.price)::numeric, 0) AS cat_revenue
+    FROM sellers s
+    JOIN order_items oi ON s.seller_id = oi.seller_id
+    JOIN products p ON oi.product_id = p.product_id
+    JOIN product_category_name_translation t ON p.product_category_name = t.product_category_name
+    GROUP BY s.seller_id, t.product_category_name_english
+),
+ranked_categories AS (
+    SELECT 
+        seller_id,
+        category_english,
+        cat_revenue,
+        ROW_NUMBER() OVER (PARTITION BY seller_id ORDER BY cat_revenue DESC) AS rn
+    FROM seller_category_revenue
+)
+SELECT 
+    t.sellerid,
+    t.total_revenues,
+    rc.category_english AS top_category,
+    rc.cat_revenue AS top_category_revenue
+FROM top10sellers t
+JOIN ranked_categories rc ON t.sellerid = rc.seller_id AND rc.rn = 1
+ORDER BY t.total_revenues DESC;
+
+
+-- bad experience rate per category
+-- only looking at orders where shipping cost > 40% of item price, these tend to get the most complaints
+SELECT 
+    t.product_category_name_english AS category,
+    ROUND(100.0 * SUM(CASE WHEN r.review_score <= 2 THEN 1 ELSE 0 END) / COUNT(oi.order_id), 2) AS bad_experience_rate,
+    AVG(oi.freight_value / oi.price) AS avg_freight_ratio,
+    COUNT(oi.order_id) AS total_sales
+FROM order_items oi
+JOIN order_reviews r ON oi.order_id = r.order_id
+JOIN products p ON oi.product_id = p.product_id
+JOIN product_category_name_translation t ON p.product_category_name = t.product_category_name
+WHERE (oi.freight_value / oi.price) > 0.4
+GROUP BY t.product_category_name_english
+HAVING COUNT(oi.order_id) > 20
+ORDER BY bad_experience_rate DESC;
+
+
+-- avg orders per seller -- result (~36) used as the minimum threshold in the next two queries
+WITH seller_orders AS (
+    SELECT COUNT(*) AS orders_per_seller
+    FROM order_items
+    GROUP BY seller_id
+)
+SELECT AVG(orders_per_seller)
+FROM seller_orders;
+
+
+-- sellers with avg score below 3.0 and above average order volume (36+)
+SELECT 
+    s.seller_id,
+    s.seller_state,
+    ROUND(SUM(oi.price)::numeric, 2) AS total_revenue,
+    COUNT(DISTINCT oi.order_id) AS total_orders,
+    ROUND(AVG(r.review_score)::numeric, 2) AS avg_seller_score,
+    ROUND(100.0 * SUM(CASE WHEN r.review_score = 1 THEN 1 ELSE 0 END) / COUNT(oi.order_id), 2) AS one_star_rate
+FROM sellers s
+JOIN order_items oi ON s.seller_id = oi.seller_id
+JOIN order_reviews r ON oi.order_id = r.order_id
+GROUP BY s.seller_id, s.seller_state
+HAVING 
+    COUNT(DISTINCT oi.order_id) > 36
+    AND AVG(r.review_score) < 3.0
+ORDER BY total_revenue ASC, one_star_rate DESC;
+
+
+-- top sellers with avg score above 4.5 and above average order volume (36+)
+SELECT 
+    s.seller_id,
+    s.seller_state,
+    ROUND(SUM(oi.price)::numeric, 2) AS total_revenue,
+    COUNT(DISTINCT oi.order_id) AS total_orders,
+    ROUND(AVG(r.review_score)::numeric, 2) AS avg_seller_score,
+    ROUND(100.0 * SUM(CASE WHEN r.review_score = 5 THEN 1 ELSE 0 END) / COUNT(oi.order_id), 2) AS five_star_rate
+FROM sellers s
+JOIN order_items oi ON s.seller_id = oi.seller_id
+JOIN order_reviews r ON oi.order_id = r.order_id
+GROUP BY s.seller_id, s.seller_state
+HAVING 
+    COUNT(DISTINCT oi.order_id) > 36
+    AND AVG(r.review_score) > 4.5
+ORDER BY total_revenue DESC;
