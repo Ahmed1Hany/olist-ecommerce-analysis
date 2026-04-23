@@ -38,7 +38,7 @@ A few issues I found and fixed before starting the analysis:
 ### Page 1 — Business Overview
 Monthly revenue and order volume from Jan 2017 to Aug 2018. Revenue peaked at ~988K in November 2017.
 
-### Page 2 — Markets & Sellers
+### Page 2 — Markets & Categories
 - São Paulo generates 5.2M in revenue — more than double the next state (RJ at 1.8M)
 - Health & Beauty is the top category at 1.26M, followed closely by Watches & Gifts
 - Furniture (Living Room) and Food grew 81% and 71% respectively in the last quarter of available data
