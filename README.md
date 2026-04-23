@@ -82,6 +82,12 @@ Late deliveries hit about 7,700 orders (8% of total) and drop the average review
 | `3_product_trends.sql` | Fastest growing categories (QoQ) |
 | `4_delivery_impact.sql` | Late delivery vs review score and repeat purchase rate |
 
+Query results from pgAdmin:
+
+![Late Delivery Query](pgadmin_late_delivery.jpg)
+
+![Growing Categories Query](pgadmin_growing_categories.jpg)
+
 ---
 
 ## Dataset
