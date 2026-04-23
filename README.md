@@ -38,10 +38,16 @@ A few issues I found and fixed before starting the analysis:
 ### Page 1 — Business Overview
 Monthly revenue and order volume from Jan 2017 to Aug 2018. Revenue peaked at ~988K in November 2017.
 
+![Business Overview](dashboard_overview.jpg)
+
+
 ### Page 2 — Markets & Categories
 - São Paulo generates 5.2M in revenue — more than double the next state (RJ at 1.8M)
 - Health & Beauty is the top category at 1.26M, followed closely by Watches & Gifts
 - Furniture (Living Room) and Food grew 81% and 71% respectively in the last quarter of available data
+
+- ![Markets and Categories](dashboard_markets_categories.jpg)
+
 
 ### Page 3 — Delivery Impact
 
@@ -51,6 +57,9 @@ Monthly revenue and order volume from Jan 2017 to Aug 2018. Revenue peaked at ~9
 | Repeat Customer Rate | 6.82% | 5.86% |
 
 Late deliveries hit about 7,700 orders (8% of total) and drop the average review score by 40%.
+![Delivery Impact](dashboard_delivery_impact.jpg)
+
+
 
 ---
 
